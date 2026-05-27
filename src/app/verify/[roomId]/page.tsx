@@ -85,10 +85,14 @@ export default function VerifyPage() {
   return (
     <main className="container animate-fade-in">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%' }}>
         <button onClick={() => { playClick(); router.back(); }}
           style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', boxShadow: 'none', padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
           ← {ar ? 'رجوع' : 'Back'}
+        </button>
+        <button onClick={() => { playClick(); router.push('/'); }}
+          style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', boxShadow: 'none', padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+          🏠 {ar ? 'الرئيسية' : 'Home'}
         </button>
       </div>
 

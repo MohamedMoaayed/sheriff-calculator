@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { ref, onValue, set } from 'firebase/database';
 import { Player, PlayerScore, calculateScores } from '@/lib/scoring';
-import { playClick, playCoin, playCounter, playFanfare, playSuccess } from '@/lib/sounds';
+import { playClick, playCoin, playCounter, playFanfare, playSuccess, playTickSound, playGong } from '@/lib/sounds';
 import { saveGame, upsertProfile, updateProfileStats, getSavedNames } from '@/lib/storage';
 import { useToast } from '@/components/ToastProvider';
 import Confetti from '@/components/Confetti';
@@ -83,6 +83,16 @@ export default function RoomPage() {
   const [showQR,        setShowQR]        = useState(false);
   const [isSpectator,   setIsSpectator]   = useState(false);
   const [confettiOn,    setConfettiOn]    = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  // Turn Timer State
+  const [timerPreset,   setTimerPreset]   = useState(90);
+  const [timerSeconds,  setTimerSeconds]  = useState(90);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  // Penalty Helper State
+  const [calcGoodType,  setCalcGoodType]  = useState<'legal' | 'contraband'>('legal');
+  const [calcQty,       setCalcQty]       = useState(0);
 
   // Timer
   const [elapsed,  setElapsed]  = useState(0);
@@ -125,6 +135,29 @@ export default function RoomPage() {
     timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTime.current) / 1000)), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
+  // Sheriff Turn Timer Effect
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (isTimerRunning && timerSeconds > 0) {
+      interval = setInterval(() => {
+        setTimerSeconds(s => {
+          if (s <= 1) {
+            setIsTimerRunning(false);
+            if (soundOn) {
+              try { playGong(); } catch (_) {}
+            }
+            return 0;
+          }
+          if (s <= 6 && soundOn) {
+            try { playTickSound(); } catch (_) {}
+          }
+          return s - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [isTimerRunning, timerSeconds, soundOn]);
 
   // Firebase listener
   useEffect(() => {
@@ -240,6 +273,9 @@ export default function RoomPage() {
   const TopBar = () => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <button onClick={() => { if (soundOn) playClick(); setShowLeaveConfirm(true); }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', boxShadow: 'none' }} title={ar ? 'الرئيسية' : 'Go Home'}>
+          🏠 {ar ? 'الرئيسية' : 'Home'}
+        </button>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.35rem 0.6rem' }}>
           <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>{t('room.roomId')}</div>
           <div style={{ fontSize: '1.3rem', fontWeight: 900, letterSpacing: '4px', color: 'var(--primary)', fontFamily: 'var(--font-cinzel)', lineHeight: 1.1 }}>{roomId}</div>
@@ -295,9 +331,35 @@ export default function RoomPage() {
           </div>
         )}
 
+        {/* Leave Confirmation Modal */}
+        {showLeaveConfirm && (
+          <div className="qr-modal-backdrop" style={{ zIndex: 6000 }} onClick={() => setShowLeaveConfirm(false)}>
+            <div className="qr-modal" style={{ maxWidth: '320px' }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontSize: '3rem', textShadow: '0 0 10px rgba(140,42,28,0.4)' }}>🚪</div>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--secondary-light)', margin: 0 }}>
+                {ar ? 'مغادرة الغرفة؟' : 'Leave Room?'}
+              </h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', margin: '0.5rem 0 1rem', lineHeight: 1.5 }}>
+                {ar ? 'هل أنت متأكد أنك تريد مغادرة الغرفة والعودة للصفحة الرئيسية؟ سيتم فقدان تقدمك الحالي.' : 'Are you sure you want to leave the room and go back to the home page? Your current progress will be lost.'}
+              </p>
+              <div style={{ display: 'flex', gap: '0.6rem', width: '100%' }}>
+                <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text)', boxShadow: 'none' }}>
+                  {ar ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button onClick={() => { setShowLeaveConfirm(false); playClick(); router.push('/'); }} style={{ flex: 1, background: 'linear-gradient(180deg, #8c2a1c 0%, #b53a28 100%)', border: '1px solid #d44', color: '#fff' }}>
+                  {ar ? 'مغادرة' : 'Leave'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <button className="theme-btn" onClick={() => setLightMode(l => !l)}>{lightMode ? '🌙' : '☀️'}</button>
+          <button onClick={() => { if (soundOn) playClick(); setShowLeaveConfirm(true); }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', boxShadow: 'none' }}>
+            🏠 {ar ? 'الرئيسية' : 'Home'}
+          </button>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button className="theme-btn" onClick={() => setLightMode(l => !l)}>{lightMode ? '🌙' : '☀️'}</button>
             <button className="sound-toggle" onClick={() => setSoundOn(s => !s)}>{soundOn ? '🔊' : '🔇'}</button>
             <button className="lang-btn" onClick={toggleLang}>{ar ? 'English' : 'عربي'}</button>
           </div>
@@ -414,6 +476,29 @@ export default function RoomPage() {
             <button onClick={() => setShowQR(false)} style={{ width: '100%', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text)', boxShadow: 'none' }}>
               ✕ {ar ? 'إغلاق' : 'Close'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="qr-modal-backdrop" style={{ zIndex: 6000 }} onClick={() => setShowLeaveConfirm(false)}>
+          <div className="qr-modal" style={{ maxWidth: '320px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: '3rem', textShadow: '0 0 10px rgba(140,42,28,0.4)' }}>🚪</div>
+            <h3 style={{ fontSize: '1.2rem', color: 'var(--secondary-light)', margin: 0 }}>
+              {ar ? 'مغادرة الغرفة؟' : 'Leave Room?'}
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', margin: '0.5rem 0 1rem', lineHeight: 1.5 }}>
+              {ar ? 'هل أنت متأكد أنك تريد مغادرة الغرفة والعودة للصفحة الرئيسية؟ سيتم فقدان تقدمك الحالي.' : 'Are you sure you want to leave the room and go back to the home page? Your current progress will be lost.'}
+            </p>
+            <div style={{ display: 'flex', gap: '0.6rem', width: '100%' }}>
+              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text)', boxShadow: 'none' }}>
+                {ar ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button onClick={() => { setShowLeaveConfirm(false); playClick(); router.push('/'); }} style={{ flex: 1, background: 'linear-gradient(180deg, #8c2a1c 0%, #b53a28 100%)', border: '1px solid #d44', color: '#fff' }}>
+                {ar ? 'مغادرة' : 'Leave'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -554,12 +639,106 @@ export default function RoomPage() {
                 <p>🎭 {t('goods.contraband')} = {t('goods.contrabandValue')}</p>
                 <p style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>⚠️ {t('bonus.tieNote')}</p>
               </div>
+
+              {/* ⚖️ Interactive Penalty & Bribe Calculator */}
+              <div className="card" style={{ padding: '1rem', marginTop: '0.75rem', border: '1px solid rgba(194,155,71,0.3)' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  ⚖️ {ar ? 'حاسبة الغرامات والرشاوى' : 'Sheriff\'s Penalty & Bribe Helper'}
+                </h4>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <button type="button" onClick={() => { setCalcGoodType('legal'); if (soundOn) playClick(); }}
+                    style={{ flex: 1, background: calcGoodType === 'legal' ? 'var(--primary)' : 'rgba(0,0,0,0.3)', color: calcGoodType === 'legal' ? '#111' : 'var(--text-muted)', border: calcGoodType === 'legal' ? 'none' : '1px solid var(--border)', fontSize: '0.75rem', padding: '0.4rem 0.5rem', minHeight: '36px', borderRadius: '6px' }}>
+                    🍎 {ar ? 'بضائع قانونية' : 'Legal Goods'}
+                  </button>
+                  <button type="button" onClick={() => { setCalcGoodType('contraband'); if (soundOn) playClick(); }}
+                    style={{ flex: 1, background: calcGoodType === 'contraband' ? 'var(--primary)' : 'rgba(0,0,0,0.3)', color: calcGoodType === 'contraband' ? '#111' : 'var(--text-muted)', border: calcGoodType === 'contraband' ? 'none' : '1px solid var(--border)', fontSize: '0.75rem', padding: '0.4rem 0.5rem', minHeight: '36px', borderRadius: '6px' }}>
+                    🎭 {ar ? 'بضائع مهربة' : 'Contraband'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', flex: 1 }}>{ar ? 'كمية البضائع المصادرة:' : 'Quantity of goods inspected:'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button type="button" onClick={() => { setCalcQty(q => Math.max(0, q - 1)); if (soundOn) playCounter(false); }}
+                      style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)', color: 'var(--text)', padding: 0, boxShadow: 'none', fontSize: '1.1rem', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                    <span style={{ width: 28, textAlign: 'center', fontWeight: 700, fontSize: '1.1rem', fontFamily: 'var(--font-cinzel)', color: 'var(--primary)' }}>
+                      {calcQty}
+                    </span>
+                    <button type="button" onClick={() => { setCalcQty(q => q + 1); if (soundOn) playCounter(true); }}
+                      style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', border: 'none', color: '#111', padding: 0, boxShadow: 'none', fontSize: '1.1rem', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div style={{ background: 'rgba(56,161,105,0.08)', border: '1px solid rgba(56,161,105,0.3)', borderRadius: '8px', padding: '0.6rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.65rem', color: '#38a169', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                      {ar ? 'إذا كان صادقاً' : 'If Merchant is Clean'}
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                      {ar ? 'الشريف يدفع للتاجر' : 'Sheriff pays Merchant'}
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#38a169', fontFamily: 'var(--font-cinzel)' }}>
+                      🪙 {calcQty * (calcGoodType === 'legal' ? 2 : 4)}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(229,62,62,0.08)', border: '1px solid rgba(229,62,62,0.3)', borderRadius: '8px', padding: '0.6rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.65rem', color: '#e53e3e', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                      {ar ? 'إذا كان كاذباً' : 'If Merchant Lied'}
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                      {ar ? 'التاجر يدفع للشريف' : 'Merchant pays Sheriff'}
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#e53e3e', fontFamily: 'var(--font-cinzel)' }}>
+                      🪙 {calcQty * (calcGoodType === 'legal' ? 2 : 4)}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
 
         {/* ── Players Panel ─────────────────────────────────────────────────── */}
         <div>
+          {/* ⏳ Sheriff Turn Timer (Negotiation) */}
+          <div className="card card-elevated" style={{ marginBottom: '1rem', border: '1px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(to right, var(--primary), var(--secondary))' }} />
+            <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', fontWeight: 700 }}>
+              <span>⏳ {ar ? 'مؤقت المفاوضات للشريف' : 'Sheriff\'s Turn Timer'}</span>
+              {isTimerRunning && <span className="join-dot" style={{ background: 'var(--primary)' }} />}
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
+              {/* Digital Readout */}
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'monospace', color: timerSeconds <= 10 ? 'var(--secondary-light)' : 'var(--text)', textShadow: timerSeconds <= 10 ? '0 0 12px rgba(181,58,40,0.5)' : 'none', letterSpacing: '2px', lineHeight: 1 }}>
+                {Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:{(timerSeconds % 60).toString().padStart(2, '0')}
+              </div>
+
+              {/* Presets */}
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {[60, 90, 120, 180].map(sec => (
+                  <button key={sec} type="button" onClick={() => { setTimerPreset(sec); setTimerSeconds(sec); setIsTimerRunning(false); if (soundOn) playClick(); }}
+                    style={{ background: timerPreset === sec ? 'var(--primary)' : 'rgba(0,0,0,0.3)', color: timerPreset === sec ? '#111' : 'var(--text-muted)', border: timerPreset === sec ? 'none' : '1px solid var(--border)', fontSize: '0.7rem', padding: '0.2rem 0.5rem', minHeight: 'auto', borderRadius: '4px', textTransform: 'none', letterSpacing: 0, fontWeight: 700 }}>
+                    {sec}s
+                  </button>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.25rem' }}>
+                <button type="button" onClick={() => { setIsTimerRunning(!isTimerRunning); if (soundOn) playClick(); }}
+                  style={{ flex: 1, background: isTimerRunning ? 'transparent' : 'linear-gradient(180deg, #d4a848 0%, #8c6820 100%)', border: isTimerRunning ? '1px solid var(--primary)' : 'none', color: isTimerRunning ? 'var(--primary)' : '#111', fontSize: '0.8rem', padding: '0.5rem', minHeight: '36px' }}>
+                  {isTimerRunning ? (ar ? '⏸️ إيقاف' : '⏸️ Pause') : (ar ? '▶️ بدء' : '▶️ Start')}
+                </button>
+                <button type="button" onClick={() => { setTimerSeconds(timerPreset); setIsTimerRunning(false); if (soundOn) playClick(); }}
+                  style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.8rem', padding: '0.5rem', minHeight: '36px' }}>
+                  🔄 {ar ? 'إعادة' : 'Reset'}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="card" style={{ marginBottom: '1rem' }}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

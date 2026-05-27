@@ -2,6 +2,14 @@
 @font-face {
   font-family: 'ArefRuqaa';
   src: url('/fonts/ArefRuqaa.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ArefRuqaa';
+  src: url('/fonts/ArefRuqaa.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -9,8 +17,7 @@
 
 /* ─── Design Tokens ───────────────────────────────────────────────────────── */
 :root {
-/* ─── Dark mode (default) ─────────────────────────────────────────────────── */
-:root {
+  /* ─── Dark mode (default) ─────────────────────────────────────────────────── */
   --primary: #c29b47;
   --primary-light: #e0c060;
   --secondary: #8c2a1c;
@@ -55,8 +62,9 @@ html.light-mode body {
 
 html.light-mode input,
 html.light-mode select {
-  background: #fffff8;
-  border-color: var(--border);
+  background: #fffff8 !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
 }
 
 html.light-mode .card { background: var(--surface); }
@@ -198,7 +206,7 @@ input, select {
 
 html[dir="rtl"] input,
 html[dir="rtl"] select {
-  font-family: 'Qashib', var(--font-inter), sans-serif;
+  font-family: 'ArefRuqaa', var(--font-inter), sans-serif;
 }
 
 input:focus, select:focus {

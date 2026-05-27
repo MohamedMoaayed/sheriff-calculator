@@ -119,3 +119,40 @@ export function playCounter(up: boolean) {
     osc.stop(t + 0.12);
   } catch (_) {}
 }
+
+// Timer warning tick sound
+export function playTickSound() {
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1000, t);
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    osc.start(t);
+    osc.stop(t + 0.05);
+  } catch (_) {}
+}
+
+// Resonant gong sound when time expires
+export function playGong() {
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(110, t + 1.5);
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+    osc.start(t);
+    osc.stop(t + 1.8);
+  } catch (_) {}
+}
