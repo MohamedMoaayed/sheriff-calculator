@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { ref, set } from 'firebase/database';
 import { playClick, playSuccess } from '@/lib/sounds';
+import { getHistory } from '@/lib/storage';
 
 const GOODS = [
   { key: 'apples',   emoji: '🍎', color: '#e53e3e', perCard: 2, king: 20, queen: 10 },
@@ -20,6 +21,11 @@ export default function Home() {
   const [roomId, setRoomId] = useState('');
   const [loading, setLoading] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [historyCount, setHistoryCount] = useState(0);
+
+  useEffect(() => {
+    setHistoryCount(getHistory().length);
+  }, []);
 
   useEffect(() => {
     const lang = i18n.language;
@@ -63,26 +69,33 @@ export default function Home() {
   return (
     <main className="container animate-fade-in">
       {/* Top bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <button
-          className="sound-toggle"
-          onClick={() => setSoundOn(s => !s)}
-          title={soundOn ? 'Mute' : 'Unmute'}
-        >
-          {soundOn ? '🔊' : '🔇'}
-        </button>
-        <button className="lang-btn" onClick={toggleLanguage} id="lang-toggle">
-          {i18n.language === 'ar' ? 'English' : 'عربي'}
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button className="lang-btn" onClick={() => { playClick(); router.push('/history'); }} id="history-btn" style={{ position: 'relative' }}>
+            📜{historyCount > 0 && <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--secondary)', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>{historyCount}</span>}
+          </button>
+          <button className="lang-btn" onClick={() => { playClick(); router.push('/stats'); }} id="stats-btn">📊</button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button className="sound-toggle" onClick={() => setSoundOn(s => !s)}>
+            {soundOn ? '🔊' : '🔇'}
+          </button>
+          <button className="lang-btn" onClick={toggleLanguage} id="lang-toggle">
+            {i18n.language === 'ar' ? 'English' : 'عربي'}
+          </button>
+        </div>
       </div>
 
-      {/* Hero */}
-      <div className="header">
-        <div style={{ fontSize: '5rem', marginBottom: '0.5rem', filter: 'drop-shadow(0 4px 20px rgba(194,155,71,0.5))' }}>
-          ⭐
+
+      {/* Hero image banner */}
+      <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: '1.25rem' }}>
+        <img src="/images/market-banner.png" alt="Sheriff of Nottingham Market" style={{ width: '100%', height: 'clamp(160px, 35vw, 240px)', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(18,16,14,0.1) 0%, rgba(18,16,14,0.85) 100%)', display: 'flex', alignItems: 'flex-end', padding: '1rem 1.25rem' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 'clamp(1.4rem,6vw,2.5rem)', lineHeight: 1.2 }}>{t('home.title')}</h1>
+            <p style={{ margin: 0, marginTop: '0.3rem', color: 'var(--primary)', fontSize: 'clamp(0.8rem,3vw,1rem)' }}>{t('home.subtitle')}</p>
+          </div>
         </div>
-        <h1>{t('home.title')}</h1>
-        <p>{t('home.subtitle')}</p>
       </div>
 
       {/* Create / Join card */}
@@ -169,6 +182,17 @@ export default function Home() {
         <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.75rem', lineHeight: 1.5 }}>
           ⚠️ {t('bonus.tieNote')}
         </p>
+      </div>
+
+      {/* Goods art banner */}
+      <div style={{ borderRadius: 14, overflow: 'hidden', marginTop: '1.5rem', position: 'relative' }}>
+        <img src="/images/goods-banner.png" alt="Market Goods" style={{ width: '100%', height: 180, objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(18,16,14,0.85), transparent 60%)' }}>
+          <div style={{ padding: '1.2rem 1.25rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <p style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>{i18n.language === 'ar' ? 'السوق ينتظرك!' : 'The market awaits!'}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0, marginTop: '0.3rem' }}>{i18n.language === 'ar' ? 'أنشئ غرفة وابدأ التجارة' : 'Create a room & start trading'}</p>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}

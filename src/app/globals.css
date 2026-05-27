@@ -1,13 +1,15 @@
-/* ─── Qashib Arabic Font ──────────────────────────────────────────────────── */
+/* ─── ArefRuqaa Arabic Font ──────────────────────────────────────────────── */
 @font-face {
-  font-family: 'Qashib';
-  src: url('/fonts/Qashib.ttf') format('truetype');
-  font-weight: normal;
+  font-family: 'ArefRuqaa';
+  src: url('/fonts/ArefRuqaa.ttf') format('truetype');
+  font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
 
 /* ─── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+/* ─── Dark mode (default) ─────────────────────────────────────────────────── */
 :root {
   --primary: #c29b47;
   --primary-light: #e0c060;
@@ -29,14 +31,48 @@
   --contraband-color: #9c59b6;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* ─── Reset ───────────────────────────────────────────────────────────────── */
+/* ─── Light mode ──────────────────────────────────────────────────────────── */
+html.light-mode {
+  --primary: #8c6820;
+  --primary-light: #a07a30;
+  --secondary: #8c2a1c;
+  --background: #f5efe0;
+  --surface: #fffdf5;
+  --surface-2: #f0e8d0;
+  --text: #2a1f0a;
+  --text-muted: #6b5a3a;
+  --border: #d4c09a;
+  --gold: #b8860b;
+  --queen-color: #555;
+}
+
+html.light-mode body {
+  background-image: radial-gradient(ellipse at top, #ede0c0 0%, #f5efe0 60%);
+}
+
+html.light-mode input,
+html.light-mode select {
+  background: #fffff8;
+  border-color: var(--border);
+}
+
+html.light-mode .card { background: var(--surface); }
+html.light-mode .card-elevated { background: linear-gradient(135deg, #fff9f0, #fffdf5); }
+html.light-mode .good-card { background: var(--surface); }
+html.light-mode .result-card { background: var(--surface); }
+html.light-mode .result-card.winner { background: linear-gradient(135deg, #fffde0, #fff8c0); }
+html.light-mode .score-item { background: rgba(0,0,0,0.06); }
+
+/* ─── Reset ───────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 html {
@@ -61,7 +97,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Arabic font override ────────────────────────────────────────────────── */
+/* ─── ArefRuqaa Arabic font override ─────────────────────────────────────── */
 html[dir="rtl"] body,
 html[dir="rtl"] h1,
 html[dir="rtl"] h2,
@@ -71,13 +107,29 @@ html[dir="rtl"] label,
 html[dir="rtl"] button,
 html[dir="rtl"] span,
 html[dir="rtl"] input::placeholder {
-  font-family: 'Qashib', var(--font-inter), sans-serif;
+  font-family: 'ArefRuqaa', var(--font-inter), sans-serif;
+  font-size: 1.08em; /* ArefRuqaa needs slightly more room */
+  line-height: 1.7;
 }
 
-html[dir="rtl"] h1,
-html[dir="rtl"] h2,
-html[dir="rtl"] h3 {
-  font-family: 'Qashib', var(--font-cinzel), serif;
+html[dir="rtl"] h1 { font-family: 'ArefRuqaa', serif; font-size: clamp(2.2rem, 8vw, 4rem); line-height: 1.3; }
+html[dir="rtl"] h2 { font-family: 'ArefRuqaa', serif; font-size: 1.5rem; line-height: 1.4; }
+html[dir="rtl"] h3 { font-family: 'ArefRuqaa', serif; font-size: 1.2rem; }
+
+html[dir="rtl"] button {
+  font-size: 1.05rem;
+  padding: 0.85rem 1.4rem;
+  min-height: 48px;
+}
+
+html[dir="rtl"] label {
+  font-size: 0.95rem;
+}
+
+html[dir="rtl"] input,
+html[dir="rtl"] select {
+  font-family: 'ArefRuqaa', var(--font-inter), sans-serif;
+  font-size: 1.1rem;
 }
 
 /* ─── Typography ──────────────────────────────────────────────────────────── */
@@ -280,7 +332,8 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 }
 
 html[dir="rtl"] .good-name {
-  font-family: 'Qashib', var(--font-cinzel), serif;
+  font-family: 'ArefRuqaa', var(--font-cinzel), serif;
+  font-size: 1.05rem;
 }
 
 .good-value {
@@ -608,4 +661,165 @@ html[dir="rtl"] { text-align: right; }
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
+}
+
+/* ─── Toast notifications ─────────────────────────────────────────────────── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-20px) scale(0.9); }
+}
+
+.toast-container {
+  position: fixed;
+  top: calc(1rem + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  color: var(--text);
+  padding: 0.65rem 1.25rem;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(194,155,71,0.2);
+  white-space: nowrap;
+  animation: toastIn 0.3s ease forwards;
+  backdrop-filter: blur(8px);
+}
+
+.toast.exit { animation: toastOut 0.3s ease forwards; }
+
+/* ─── Tie badge ───────────────────────────────────────────────────────────── */
+@keyframes tiePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(194,155,71,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(194,155,71,0); }
+}
+
+.tie-card {
+  animation: tiePulse 1.5s ease infinite;
+  border-color: var(--primary) !important;
+}
+
+.tie-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: rgba(194,155,71,0.15);
+  border: 1px solid rgba(194,155,71,0.4);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* ─── QR Code modal ───────────────────────────────────────────────────────── */
+.qr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.qr-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 300px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  animation: slideIn 0.3s ease;
+}
+
+/* ─── Theme toggle button ─────────────────────────────────────────────────── */
+.theme-btn {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  font-size: 1rem !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.theme-btn:hover {
+  border-color: var(--primary) !important;
+  transform: rotate(20deg) !important;
+}
+
+/* ─── Spectator badge ─────────────────────────────────────────────────────── */
+.spectator-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(100,100,255,0.1);
+  border: 1px solid rgba(100,100,255,0.3);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  color: #7888ff;
+}
+
+/* ─── Results export card ─────────────────────────────────────────────────── */
+.results-card-export {
+  background: linear-gradient(135deg, #1e1b18, #2c2723);
+  border: 2px solid var(--primary);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* ─── Animated score number ───────────────────────────────────────────────── */
+.animated-score {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Join notification dot ───────────────────────────────────────────────── */
+@keyframes pulseGreen {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.3); }
+}
+
+.join-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38a169;
+  animation: pulseGreen 1.5s ease infinite;
+  display: inline-block;
+}
+
+/* ─── Input transition override (disable for interactive inputs) ─────────── */
+input, button, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.2s ease, opacity 0.2s ease !important;
 }
