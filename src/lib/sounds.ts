@@ -258,3 +258,99 @@ export function stopBgMusic() {
     bgMusicNodes = [];
   } catch (_) {}
 }
+
+// Story 1: The Goal - Ambient rolled harp chord
+export function playStory1() {
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    const notes = [220.00, 261.63, 329.63, 440.00]; // A minor chord rolled
+    notes.forEach((freq, i) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      const filter = c.createBiquadFilter();
+      
+      osc.type = 'triangle';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(600, t);
+      
+      osc.frequency.setValueAtTime(freq, t + i * 0.12);
+      gain.gain.setValueAtTime(0.12, t + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 1.2);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(c.destination);
+      
+      osc.start(t + i * 0.12);
+      osc.stop(t + i * 0.12 + 1.2);
+    });
+  } catch (_) {}
+}
+
+// Story 2: The Declaration - Sneaky wobbly lute pluck sequence
+export function playStory2() {
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    const notes = [392.00, 370.00, 392.00, 440.00, 493.88]; // Sneaky sequence G4 F#4 G4 A4 B4
+    notes.forEach((freq, i) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t + i * 0.14);
+      gain.gain.setValueAtTime(0.1, t + i * 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.14 + 0.35);
+      
+      osc.connect(gain);
+      gain.connect(c.destination);
+      
+      osc.start(t + i * 0.14);
+      osc.stop(t + i * 0.14 + 0.35);
+    });
+  } catch (_) {}
+}
+
+// Story 3: The Inspection - Low dramatic drum and high warning tick
+export function playStory3() {
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    
+    // Drum impact
+    const drum = c.createOscillator();
+    const drumGain = c.createGain();
+    drum.type = 'sine';
+    drum.frequency.setValueAtTime(110, t);
+    drum.frequency.exponentialRampToValueAtTime(25, t + 0.5);
+    drumGain.gain.setValueAtTime(0.3, t);
+    drumGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    
+    drum.connect(drumGain);
+    drumGain.connect(c.destination);
+    
+    drum.start(t);
+    drum.stop(t + 0.5);
+
+    // Suspicious high tick
+    const tick = c.createOscillator();
+    const tickGain = c.createGain();
+    tick.type = 'triangle';
+    tick.frequency.setValueAtTime(1400, t + 0.08);
+    tickGain.gain.setValueAtTime(0.08, t + 0.08);
+    tickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    
+    tick.connect(tickGain);
+    tickGain.connect(c.destination);
+    
+    tick.start(t + 0.08);
+    tick.stop(t + 0.12);
+  } catch (_) {}
+}
+
+// Story 4: The Final Reckoning - Grand royal fanfare
+export function playStory4() {
+  playFanfare();
+}
+

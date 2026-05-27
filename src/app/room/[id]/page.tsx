@@ -110,6 +110,16 @@ export default function RoomPage() {
   const [calcGoodType,  setCalcGoodType]  = useState<'legal' | 'contraband'>('legal');
   const [calcQty,       setCalcQty]       = useState(0);
 
+  // Contraband Card Calculator State
+  const [contraband6,   setContraband6]   = useState(0);
+  const [contraband7,   setContraband7]   = useState(0);
+  const [contraband8,   setContraband8]   = useState(0);
+  const [contraband9,   setContraband9]   = useState(0);
+  const [showContrabandCalc, setShowContrabandCalc] = useState(false);
+
+  // History Double-Save Prevention Ref
+  const gameSavedRef = useRef(false);
+
   // Timer
   const [elapsed,  setElapsed]  = useState(0);
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -144,6 +154,11 @@ export default function RoomPage() {
     document.documentElement.dir = ar ? 'rtl' : 'ltr';
     setSavedNames(getSavedNames());
   }, [ar]);
+
+  // Auto-calculate contraband total value from card counts
+  useEffect(() => {
+    setContraband((contraband6 * 6) + (contraband7 * 7) + (contraband8 * 8) + (contraband9 * 9));
+  }, [contraband6, contraband7, contraband8, contraband9]);
 
   // Timer
   useEffect(() => {
@@ -216,16 +231,19 @@ export default function RoomPage() {
         if (soundOn) setTimeout(playFanfare, 200);
         setTimeout(() => setConfettiOn(false), 6000);
 
-        const duration = Math.floor((Date.now() - startTime.current) / 1000);
-        saveGame({
-          id: `${roomId}-${Date.now()}`, date: Date.now(), roomId, duration,
-          winner: scores[0]?.name ?? '',
-          players: scores.map((s, i) => ({ id: s.id, name: s.name, totalScore: s.totalScore, rank: i + 1 })),
-        });
-        scores.forEach((s, i) => {
-          upsertProfile(s.name, (s as PlayerScore & { color?: string }).color ?? '#c29b47');
-          updateProfileStats(s.name, s.totalScore, i === 0);
-        });
+        if (!gameSavedRef.current) {
+          gameSavedRef.current = true;
+          const duration = Math.floor((Date.now() - startTime.current) / 1000);
+          saveGame({
+            id: `${roomId}-${Date.now()}`, date: Date.now(), roomId, duration,
+            winner: scores[0]?.name ?? '',
+            players: scores.map((s, i) => ({ id: s.id, name: s.name, totalScore: s.totalScore, rank: i + 1 })),
+          });
+          scores.forEach((s, i) => {
+            upsertProfile(s.name, (s as PlayerScore & { color?: string }).color ?? '#c29b47');
+            updateProfileStats(s.name, s.totalScore, i === 0);
+          });
+        }
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,9 +309,12 @@ export default function RoomPage() {
       setResults(scores);
       setConfettiOn(true);
       setTimeout(() => setConfettiOn(false), 6000);
-      const duration = Math.floor((Date.now() - startTime.current) / 1000);
-      saveGame({ id: `${roomId}-${Date.now()}`, date: Date.now(), roomId, duration, winner: scores[0]?.name ?? '', players: scores.map((s, i) => ({ id: s.id, name: s.name, totalScore: s.totalScore, rank: i + 1 })) });
-      scores.forEach((s, i) => updateProfileStats(s.name, s.totalScore, i === 0));
+      if (!gameSavedRef.current) {
+        gameSavedRef.current = true;
+        const duration = Math.floor((Date.now() - startTime.current) / 1000);
+        saveGame({ id: `${roomId}-${Date.now()}`, date: Date.now(), roomId, duration, winner: scores[0]?.name ?? '', players: scores.map((s, i) => ({ id: s.id, name: s.name, totalScore: s.totalScore, rank: i + 1 })) });
+        scores.forEach((s, i) => updateProfileStats(s.name, s.totalScore, i === 0));
+      }
     }
   };
 
@@ -338,7 +359,7 @@ export default function RoomPage() {
       if (soundOn) playClick();
       const emoji = (i: number) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
       const text = results.map((s, i) => `${emoji(i)} ${s.name}: ${s.totalScore}`).join('\n');
-      const msg  = `👑 ${t('home.title')}\n\n${text}\n\n⏱️ ${formatTime(elapsed)}\n⭐ By Moe 2026`;
+      const msg  = `👑 ${t('home.title')}\n\n${text}\n\n⏱️ ${formatTime(elapsed)}\n⭐ By Mohammed Moaayed 2026`;
       if (navigator.share) navigator.share({ title: t('home.title'), text: msg });
       else { navigator.clipboard.writeText(msg); toast(ar ? 'تم نسخ النتائج!' : 'Results copied!', '📋'); }
     };
@@ -484,7 +505,7 @@ export default function RoomPage() {
             📊 {ar ? 'الإحصائيات' : 'Stats'}
           </button>
         </div>
-        <footer className="app-footer">⭐ By Moe 2026 ⭐</footer>
+        <footer className="app-footer">⭐ By Mohammed Moaayed 2026 ⭐</footer>
       </main>
     );
   }
@@ -610,10 +631,56 @@ export default function RoomPage() {
                     onChange={e => {
                       const val = e.target.value.replace(/[^0-9]/g, '');
                       setContraband(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                      setContraband6(0);
+                      setContraband7(0);
+                      setContraband8(0);
+                      setContraband9(0);
                     }}
                     id="contraband-input" style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, color: 'var(--contraband-color)' }} />
                 </div>
               </div>
+
+              {/* Contraband Card Calculator Link & Expanded Panel */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem', marginBottom: '0.75rem' }}>
+                <button type="button" onClick={() => { setShowContrabandCalc(!showContrabandCalc); if (soundOn) playClick(); }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--contraband-color)', fontSize: '0.8rem', padding: '0.2rem 0.5rem', minHeight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: 'none' }}>
+                  🎭 {showContrabandCalc ? (ar ? 'إغلاق حاسبة البطاقات' : 'Hide Card Calculator') : (ar ? 'احسب بقيمة بطاقات الممنوعات (٦، ٧، ٨، ٩)' : 'Calculate by Contraband Cards (6, 7, 8, 9)')}
+                </button>
+              </div>
+
+              {showContrabandCalc && (
+                <div className="card" style={{ padding: '0.85rem', marginBottom: '1rem', border: '1px solid rgba(156,89,182,0.3)', background: 'rgba(156,89,182,0.03)', borderRadius: '10px', animation: 'fadeIn 0.25s ease' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.6rem', textAlign: 'center' }}>
+                    {ar ? 'أدخل عدد بطاقات الممنوعات بكل قيمة، وسيتم حساب المجموع تلقائياً:' : 'Enter the number of contraband cards of each gold value:'}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+                    {[
+                      { val: 6, state: contraband6, setter: setContraband6, color: '#f39c12' },
+                      { val: 7, state: contraband7, setter: setContraband7, color: '#e67e22' },
+                      { val: 8, state: contraband8, setter: setContraband8, color: '#d35400' },
+                      { val: 9, state: contraband9, setter: setContraband9, color: '#c0392b' },
+                    ].map(card => (
+                      <div key={card.val} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: card.color }}>{ar ? `بطاقة قيمة ${card.val}` : `${card.val} Gold`}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <button type="button" onClick={() => { if (soundOn) playCounter(false); card.setter(Math.max(0, card.state - 1)); }}
+                            style={{ width: 24, height: 24, minWidth: 24, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', color: 'var(--text)', padding: 0, minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', boxShadow: 'none' }}>−</button>
+                          <input type="text" inputMode="numeric" pattern="[0-9]*"
+                            value={card.state === 0 ? '' : card.state}
+                            placeholder="0"
+                            onChange={e => {
+                              const val = e.target.value.replace(/[^0-9]/g, '');
+                              card.setter(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                            }}
+                            style={{ width: 34, height: 28, minHeight: 28, textAlign: 'center', padding: '0.1rem', fontSize: '0.9rem', fontWeight: 700, border: '1px solid var(--border)', borderRadius: '4px', background: '#000', color: '#fff' }} />
+                          <button type="button" onClick={() => { if (soundOn) playCounter(true); card.setter(card.state + 1); }}
+                            style={{ width: 24, height: 24, minWidth: 24, borderRadius: '50%', background: 'var(--contraband-color)', border: 'none', color: '#fff', padding: 0, minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', boxShadow: 'none' }}>+</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Goods counters */}
               <div className="goods-grid" style={{ marginBottom: '1rem', marginTop: '0.25rem' }}>
@@ -837,7 +904,7 @@ export default function RoomPage() {
         </div>
       </div>
 
-      <footer className="app-footer">⭐ By Moe 2026 ⭐</footer>
+      <footer className="app-footer">⭐ By Mohammed Moaayed 2026 ⭐</footer>
     </main>
   );
 }

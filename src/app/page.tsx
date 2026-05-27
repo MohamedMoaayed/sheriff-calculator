@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { ref, set } from 'firebase/database';
-import { playClick, playSuccess } from '@/lib/sounds';
+import { playClick, playSuccess, playStory1, playStory2, playStory3, playStory4 } from '@/lib/sounds';
 import { getHistory } from '@/lib/storage';
 
 const GOODS = [
@@ -23,6 +23,12 @@ export default function Home() {
   const [soundOn, setSoundOn] = useState(true);
   const [historyCount, setHistoryCount] = useState(0);
 
+  // IG Stories State
+  const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
+  const [storyProgress, setStoryProgress] = useState(0);
+
+  const ar = i18n.language === 'ar';
+
   useEffect(() => {
     setHistoryCount(getHistory().length);
   }, []);
@@ -32,6 +38,42 @@ export default function Home() {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   }, [i18n.language]);
+
+  // IG Stories Auto-Advance and Sound playback effect
+  useEffect(() => {
+    if (activeStoryIdx === null) return;
+    
+    // Play sound according to active slide
+    if (soundOn) {
+      try {
+        if (activeStoryIdx === 0) playStory1();
+        else if (activeStoryIdx === 1) playStory2();
+        else if (activeStoryIdx === 2) playStory3();
+        else if (activeStoryIdx === 3) playStory4();
+      } catch (_) {}
+    }
+    
+    setStoryProgress(0);
+    const duration = 8000; // 8 seconds per slide
+    const intervalTime = 100; // update progress bar every 100ms
+    const step = (intervalTime / duration) * 100;
+    
+    const interval = setInterval(() => {
+      setStoryProgress(prev => {
+        if (prev >= 100) {
+          if (activeStoryIdx < 3) {
+            setActiveStoryIdx(activeStoryIdx + 1);
+          } else {
+            setActiveStoryIdx(null); // auto close at the end
+          }
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalTime);
+    
+    return () => clearInterval(interval);
+  }, [activeStoryIdx, soundOn]);
 
   const toggleLanguage = () => {
     if (soundOn) playClick();
@@ -85,6 +127,249 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+      {/* Styles for stories hover & scroll */}
+      <style>{`
+        .story-bubble-circle:hover {
+          transform: scale(1.08);
+          border-color: var(--primary-light) !important;
+          box-shadow: 0 0 14px rgba(194,155,71,0.5), inset 0 0 8px rgba(0,0,0,0.5) !important;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      {/* IG Stories Bubble Row */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          overflowX: 'auto', 
+          padding: '0.2rem 0.2rem 0.6rem', 
+          marginBottom: '1rem', 
+          scrollbarWidth: 'none',
+          justifyContent: 'center',
+          flexWrap: 'nowrap'
+        }} 
+        className="no-scrollbar"
+      >
+        {[
+          { idx: 0, emoji: '🏆', key: 'bubble1' },
+          { idx: 1, emoji: '🗣️', key: 'bubble2' },
+          { idx: 2, emoji: '🔍', key: 'bubble3' },
+          { idx: 3, emoji: '👑', key: 'bubble4' },
+        ].map(item => (
+          <button
+            key={item.idx}
+            onClick={() => { if (soundOn) playClick(); setActiveStoryIdx(item.idx); }}
+            style={{
+              flexShrink: 0,
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.35rem',
+              cursor: 'pointer',
+              boxShadow: 'none',
+              minHeight: 'auto',
+              transform: 'none',
+              userSelect: 'none',
+            }}
+          >
+            <div 
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'var(--surface)',
+                border: '2.5px solid var(--primary)',
+                boxShadow: '0 0 10px rgba(194,155,71,0.25), inset 0 0 8px rgba(0,0,0,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.75rem',
+                transition: 'transform 0.2s, border-color 0.2s, box-shadow 0.2s',
+              }}
+              className="story-bubble-circle"
+            >
+              {item.emoji}
+            </div>
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
+              {t(`stories.${item.key}`)}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* IG Stories Modal Viewer Overlay */}
+      {activeStoryIdx !== null && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#0a0908',
+            zIndex: 10000,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 'calc(1rem + var(--safe-top)) 1rem calc(1.5rem + var(--safe-bottom))',
+            animation: 'fadeIn 0.22s ease-out',
+            color: '#fff',
+          }}
+          onClick={(e) => {
+            // Click right side to advance, left side to go back
+            const rect = e.currentTarget.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            if (clickX > width * 0.4) {
+              if (activeStoryIdx < 3) {
+                setActiveStoryIdx(activeStoryIdx + 1);
+              } else {
+                setActiveStoryIdx(null);
+              }
+            } else {
+              if (activeStoryIdx > 0) {
+                setActiveStoryIdx(activeStoryIdx - 1);
+              } else {
+                setActiveStoryIdx(null);
+              }
+            }
+          }}
+        >
+          {/* Background Story Image */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(/images/story-${activeStoryIdx + 1}.png)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.82,
+              zIndex: 1,
+            }}
+          />
+
+          {/* Dark Vignette/Overlay Gradient */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to bottom, rgba(10,9,8,0.75) 0%, transparent 20%, transparent 60%, rgba(10,9,8,0.95) 100%)',
+              zIndex: 2,
+            }}
+          />
+
+          {/* Story Dialog wrapper */}
+          <div style={{ width: '100%', maxWidth: '420px', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+            
+            {/* Top Segments & Header */}
+            <div>
+              <div style={{ display: 'flex', gap: '5px', marginBottom: '0.75rem', width: '100%' }}>
+                {[0, 1, 2, 3].map(idx => (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      height: '3px',
+                      background: 'rgba(255,255,255,0.22)',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        background: 'var(--primary)',
+                        width: idx < activeStoryIdx ? '100%' : idx === activeStoryIdx ? `${storyProgress}%` : '0%',
+                        transition: idx === activeStoryIdx ? 'width 0.1s linear' : 'none',
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1.5px solid var(--primary)', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>
+                    🏰
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textShadow: '0 1px 4px #000', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', color: 'var(--primary)' }}>
+                    {t('home.title')}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (soundOn) playClick();
+                    setActiveStoryIdx(null);
+                  }}
+                  style={{
+                    background: 'rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    minWidth: '32px',
+                    minHeight: '32px',
+                    padding: 0,
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'none',
+                    transform: 'none',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Card Context */}
+            <div
+              style={{
+                background: 'rgba(30, 27, 24, 0.92)',
+                border: '1.5px solid var(--primary)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                boxShadow: '0 12px 36px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05)',
+                backdropFilter: 'blur(16px)',
+                textAlign: ar ? 'right' : 'left',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.5rem', background: 'rgba(194,155,71,0.15)', border: '1px solid var(--primary)', borderRadius: '20px', fontSize: '0.68rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.65rem', fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
+                🎙️ {ar ? 'سيد اللعبة (المُوجّه)' : 'Gamemaster Explanation'}
+              </div>
+              
+              <h2 style={{ fontSize: '1.2rem', color: '#fff', margin: 0, marginBottom: '0.45rem', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', textShadow: 'none' }}>
+                {t(`stories.title${activeStoryIdx + 1}`)}
+              </h2>
+              
+              <p style={{ fontSize: '0.94rem', color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: 1.65, fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
+                {t(`stories.desc${activeStoryIdx + 1}`)}
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.9rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
+                <span>◀ {ar ? 'اضغط لليسار للرجوع' : 'Tap left for back'}</span>
+                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{activeStoryIdx + 1} / 4</span>
+                <span>{ar ? 'اضغط لليمين للتالي' : 'Tap right for next'} ▶</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
 
       {/* Hero image banner */}
@@ -197,7 +482,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="app-footer">
-        ⭐ By Moe 2026 ⭐
+        ⭐ By Mohammed Moaayed 2026 ⭐
       </footer>
     </main>
   );

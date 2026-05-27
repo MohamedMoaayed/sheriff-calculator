@@ -153,7 +153,7 @@ export default function StatsPage() {
         </>
       )}
 
-      <footer className="app-footer">⭐ By Moe 2026 ⭐</footer>
+      <footer className="app-footer">⭐ By Mohammed Moaayed 2026 ⭐</footer>
     </main>
   );
 }

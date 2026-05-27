@@ -30,6 +30,14 @@ const PROFILES_KEY = 'sheriff_profiles';
 export function saveGame(record: GameRecord): void {
   if (typeof window === 'undefined') return;
   const history = getHistory();
+  
+  // Deduplicate: prevent saving the same room again if saved within the last 8 seconds
+  const isDuplicate = history.some(r => 
+    r.id === record.id || 
+    (r.roomId === record.roomId && Math.abs(r.date - record.date) < 8000)
+  );
+  if (isDuplicate) return;
+
   history.unshift(record); // newest first
   const trimmed = history.slice(0, 20); // keep last 20 games
   localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));

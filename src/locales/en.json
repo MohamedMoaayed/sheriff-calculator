@@ -72,5 +72,20 @@
     "queenOf": "Queen of {{goods}}",
     "playAgain": "Play Again",
     "congratulations": "Congratulations!"
+  },
+  "stories": {
+    "title": "How to Play",
+    "bubble1": "The Goal",
+    "bubble2": "Declare",
+    "bubble3": "Inspect",
+    "bubble4": "End Score",
+    "title1": "🏆 The Goal",
+    "title2": "🗣️ The Declaration",
+    "title3": "🔍 The Inspection",
+    "title4": "👑 The Final Reckoning",
+    "desc1": "Welcome, Merchants! Your goal is to gather the most gold by bringing valuable goods into the bustling market of Nottingham. Trade honestly... or smuggle contraband!",
+    "desc2": "Fill your secret merchant bag and declare what is inside to the Sheriff. You must declare the correct amount of cards, but you can lie about their type. Can you bluff without flinching?",
+    "desc3": "The Sheriff decides who to inspect! If you lied and get caught, you pay the Sheriff a penalty. But if you were honest and gets inspected, the Sheriff pays YOU compensation!",
+    "desc4": "At the end of the game, calculate your score: Gold + Goods Value + Contraband. Plus, the players with the most Apples, Cheese, Bread, or Chickens receive the ultimate King & Queen bonuses!"
   }
 }

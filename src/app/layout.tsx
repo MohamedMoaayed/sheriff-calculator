@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title: "شريف نوتنغهام - Sheriff of Nottingham",
   description: "حاسبة نقاط نهاية لعبة شريف نوتنغهام متعددة اللاعبين - Multiplayer end game scoring calculator",
   keywords: ["Sheriff of Nottingham", "شريف نوتنغهام", "board game", "calculator"],
-  authors: [{ name: "Moe" }],
-  creator: "Moe",
+  authors: [{ name: "Mohammed Moaayed" }],
+  creator: "Mohammed Moaayed",
   applicationName: "Sheriff of Nottingham Calculator",
   appleWebApp: {
     capable: true,
