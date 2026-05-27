@@ -11,10 +11,10 @@ i18n
       en: { translation: en },
       ar: { translation: ar },
     },
-    lng: 'en', // default language
-    fallbackLng: 'en',
+    lng: 'ar', // default language = Arabic
+    fallbackLng: 'ar',
     interpolation: {
-      escapeValue: false, // react already safes from xss
+      escapeValue: false,
     },
   });
 
