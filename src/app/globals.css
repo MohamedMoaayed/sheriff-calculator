@@ -93,7 +93,8 @@ body {
   background-color: var(--background);
   color: var(--text);
   font-family: var(--font-inter), 'Segoe UI', sans-serif;
-  line-height: 1.5;
+  font-size: 1.06rem; /* Increased base font size for higher readability */
+  line-height: 1.6;
   min-height: 100vh;
   min-height: 100dvh; /* dynamic viewport height */
   background-image:
@@ -116,28 +117,28 @@ html[dir="rtl"] button,
 html[dir="rtl"] span,
 html[dir="rtl"] input::placeholder {
   font-family: 'ArefRuqaa', var(--font-inter), sans-serif;
-  font-size: 1.08em; /* ArefRuqaa needs slightly more room */
-  line-height: 1.7;
+  font-size: 1.16em; /* Increased from 1.08em for beautiful, large Arabic typography */
+  line-height: 1.75;
 }
 
-html[dir="rtl"] h1 { font-family: 'ArefRuqaa', serif; font-size: clamp(2.2rem, 8vw, 4rem); line-height: 1.3; }
-html[dir="rtl"] h2 { font-family: 'ArefRuqaa', serif; font-size: 1.5rem; line-height: 1.4; }
-html[dir="rtl"] h3 { font-family: 'ArefRuqaa', serif; font-size: 1.2rem; }
+html[dir="rtl"] h1 { font-family: 'ArefRuqaa', serif; font-size: clamp(2.4rem, 9vw, 4.5rem); line-height: 1.3; }
+html[dir="rtl"] h2 { font-family: 'ArefRuqaa', serif; font-size: 1.7rem; line-height: 1.4; }
+html[dir="rtl"] h3 { font-family: 'ArefRuqaa', serif; font-size: 1.35rem; }
 
 html[dir="rtl"] button {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   padding: 0.85rem 1.4rem;
   min-height: 48px;
 }
 
 html[dir="rtl"] label {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 html[dir="rtl"] input,
 html[dir="rtl"] select {
   font-family: 'ArefRuqaa', var(--font-inter), sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 /* ─── Typography ──────────────────────────────────────────────────────────── */

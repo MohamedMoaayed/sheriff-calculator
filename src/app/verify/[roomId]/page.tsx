@@ -169,13 +169,24 @@ export default function VerifyPage() {
                 <span style={{ fontSize: '1.3rem', width: 32, textAlign: 'center' }}>{item.emoji}</span>
                 <span style={{ flex: 1, fontSize: '0.9rem', color: item.color }}>{item.label}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button onClick={() => adj(item.key as keyof Counts, -1)}
-                    style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)', color: 'var(--text)', padding: 0, boxShadow: 'none', fontSize: '1.1rem', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <button type="button" onClick={() => adj(item.key as keyof Counts, -1)}
+                    style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)', color: 'var(--text)', padding: 0, boxShadow: 'none', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    aria-label="Decrease">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
                   <span style={{ width: 28, textAlign: 'center', fontWeight: 700, fontSize: '1.1rem', fontFamily: 'var(--font-cinzel)', color: counts[item.key as keyof Counts] > 0 ? item.color : 'var(--text-muted)' }}>
                     {counts[item.key as keyof Counts]}
                   </span>
-                  <button onClick={() => adj(item.key as keyof Counts, 1)}
-                    style={{ width: 32, height: 32, borderRadius: '50%', background: item.color, border: 'none', color: '#111', padding: 0, boxShadow: 'none', fontSize: '1.1rem', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  <button type="button" onClick={() => adj(item.key as keyof Counts, 1)}
+                    style={{ width: 32, height: 32, borderRadius: '50%', background: item.color, border: 'none', color: '#111', padding: 0, boxShadow: 'none', minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    aria-label="Increase">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}

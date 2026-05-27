@@ -4,6 +4,8 @@
 // All sounds generated programmatically — no external files needed.
 
 let ctx: AudioContext | null = null;
+let bgMusicInterval: any = null;
+let bgMusicNodes: AudioNode[] = [];
 
 function getCtx(): AudioContext {
   if (!ctx) ctx = new AudioContext();
@@ -154,5 +156,105 @@ export function playGong() {
     gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
     osc.start(t);
     osc.stop(t + 1.8);
+  } catch (_) {}
+}
+
+// Start synthesized loopable medieval ambient background music
+export function startBgMusic(soundOn: boolean) {
+  if (!soundOn) return;
+  try {
+    const c = resume();
+    const t = c.currentTime;
+    
+    // Create low resonant medieval bass drone (tonic D3 = 146.83 Hz)
+    const osc1 = c.createOscillator();
+    const osc2 = c.createOscillator();
+    const droneGain = c.createGain();
+    
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(146.83, t); // D3
+    
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(73.42, t); // D2 (octave lower)
+    
+    droneGain.gain.setValueAtTime(0.015, t); // very soft ambient volume
+    
+    // Add lowpass filter to make the drone warm and soft
+    const filter = c.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(300, t);
+    
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(droneGain);
+    droneGain.connect(c.destination);
+    
+    osc1.start(t);
+    osc2.start(t);
+    
+    bgMusicNodes.push(osc1, osc2, droneGain, filter);
+    
+    // Play a slow medieval harp/lute melody
+    const notes = [
+      146.83, // D3
+      220.00, // A3
+      261.63, // C4
+      293.66, // D4
+      329.63, // E4
+      349.23, // F4
+      440.00, // A4
+    ];
+    
+    const playNextHarpNote = () => {
+      try {
+        const cNow = getCtx();
+        if (cNow.state === 'suspended') return;
+        const now = cNow.currentTime;
+        const noteFreq = notes[Math.floor(Math.random() * notes.length)];
+        
+        const pluck = cNow.createOscillator();
+        const pluckGain = cNow.createGain();
+        
+        pluck.type = 'triangle';
+        pluck.frequency.setValueAtTime(noteFreq, now);
+        
+        // Lute/Harp pluck envelope
+        pluckGain.gain.setValueAtTime(0.04, now);
+        pluckGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        
+        const pluckFilter = cNow.createBiquadFilter();
+        pluckFilter.type = 'lowpass';
+        pluckFilter.frequency.setValueAtTime(800, now);
+        
+        pluck.connect(pluckFilter);
+        pluckFilter.connect(pluckGain);
+        pluckGain.connect(cNow.destination);
+        
+        pluck.start(now);
+        pluck.stop(now + 1.2);
+      } catch (_) {}
+    };
+    
+    // Trigger a pluck note every 1.5 seconds
+    bgMusicInterval = setInterval(playNextHarpNote, 1500);
+    
+  } catch (_) {}
+}
+
+// Stop synthesized ambient music
+export function stopBgMusic() {
+  try {
+    if (bgMusicInterval) {
+      clearInterval(bgMusicInterval);
+      bgMusicInterval = null;
+    }
+    bgMusicNodes.forEach(node => {
+      try {
+        if ('stop' in node) {
+          (node as any).stop();
+        }
+      } catch (_) {}
+    });
+    bgMusicNodes = [];
   } catch (_) {}
 }

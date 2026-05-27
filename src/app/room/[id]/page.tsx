@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { ref, onValue, set } from 'firebase/database';
 import { Player, PlayerScore, calculateScores } from '@/lib/scoring';
-import { playClick, playCoin, playCounter, playFanfare, playSuccess, playTickSound, playGong } from '@/lib/sounds';
+import { playClick, playCoin, playCounter, playFanfare, playSuccess, playTickSound, playGong, startBgMusic, stopBgMusic } from '@/lib/sounds';
 import { saveGame, upsertProfile, updateProfileStats, getSavedNames } from '@/lib/storage';
 import { useToast } from '@/components/ToastProvider';
 import Confetti from '@/components/Confetti';
@@ -47,14 +47,30 @@ function GoodCounter({ good, value, onChange, soundOn }: { good: typeof GOODS[nu
       <div className="good-counter">
         <button type="button" className="counter-btn"
           onClick={() => { if (soundOn) playCounter(false); onChange(Math.max(0, value - 1)); }}
-          style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text)', border: '1px solid var(--border)' }}>−</button>
-        <input type="number" min={0} value={value}
-          onChange={e => onChange(Math.max(0, Number(e.target.value)))}
+          style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label="Decrease">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <input type="text" inputMode="numeric" pattern="[0-9]*"
+          value={value === 0 ? '' : value}
+          placeholder="0"
+          onChange={e => {
+            const val = e.target.value.replace(/[^0-9]/g, '');
+            onChange(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+          }}
           className="counter-input"
           style={{ borderColor: value > 0 ? good.color : 'var(--border)' }} />
         <button type="button" className="counter-btn"
           onClick={() => { if (soundOn) playCounter(true); onChange(value + 1); }}
-          style={{ background: good.color, color: '#111', border: 'none' }}>+</button>
+          style={{ background: good.color, color: '#111', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label="Increase">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -158,6 +174,18 @@ export default function RoomPage() {
     }
     return () => { if (interval) clearInterval(interval); };
   }, [isTimerRunning, timerSeconds, soundOn]);
+
+  // Background music effect for results page
+  useEffect(() => {
+    if (results && soundOn) {
+      try { startBgMusic(soundOn); } catch (_) {}
+    } else {
+      try { stopBgMusic(); } catch (_) {}
+    }
+    return () => {
+      try { stopBgMusic(); } catch (_) {}
+    };
+  }, [results, soundOn]);
 
   // Firebase listener
   useEffect(() => {
@@ -564,13 +592,25 @@ export default function RoomPage() {
               <div className="gold-contraband-grid">
                 <div className="input-group" style={{ marginBottom: 0 }}>
                   <label>🪙 {t('room.gold')}</label>
-                  <input type="number" min={0} value={gold}
-                    onChange={e => { setGold(+e.target.value); if (soundOn) playCoin(); }}
+                  <input type="text" inputMode="numeric" pattern="[0-9]*"
+                    value={gold === 0 ? '' : gold}
+                    placeholder="0"
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setGold(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                      if (soundOn && val !== '') playCoin();
+                    }}
                     id="gold-input" style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 700 }} />
                 </div>
                 <div className="input-group" style={{ marginBottom: 0 }}>
                   <label>🎭 {t('room.contraband')}</label>
-                  <input type="number" min={0} value={contraband} onChange={e => setContraband(+e.target.value)}
+                  <input type="text" inputMode="numeric" pattern="[0-9]*"
+                    value={contraband === 0 ? '' : contraband}
+                    placeholder="0"
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setContraband(val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                    }}
                     id="contraband-input" style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, color: 'var(--contraband-color)' }} />
                 </div>
               </div>
