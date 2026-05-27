@@ -1,0 +1,136 @@
+:root {
+  --primary: #c29b47;
+  --secondary: #8c2a1c;
+  --background: #1e1b18;
+  --surface: #2c2723;
+  --text: #f0e6d2;
+  --text-muted: #a69c8a;
+  --border: #4a4138;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text);
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  /* subtle wood/tavern texture approach */
+  background-image: radial-gradient(circle at 50% 0%, #2c2723 0%, #1e1b18 100%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cinzel), serif;
+  color: var(--primary);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-cinzel), serif;
+  background: linear-gradient(180deg, var(--primary) 0%, #a07a30 100%);
+  color: #1a1613;
+  border: 1px solid #e0b865;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+button:hover {
+  background: linear-gradient(180deg, #d3ac58 0%, var(--primary) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.4);
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+input {
+  background: #1a1613;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: var(--font-inter), sans-serif;
+  width: 100%;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.header h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.header p {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+html[dir="rtl"] {
+  text-align: right;
+}
+
+html[dir="rtl"] button {
+  letter-spacing: 0;
+}

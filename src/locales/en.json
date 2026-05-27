@@ -1,0 +1,34 @@
+{
+  "home": {
+    "title": "Sheriff of Nottingham",
+    "subtitle": "End Game Scoring Calculator",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "roomIdPlaceholder": "Enter Room ID",
+    "roomCreated": "Room created!",
+    "join": "Join"
+  },
+  "room": {
+    "roomId": "Room ID: {{id}}",
+    "waiting": "Waiting for players...",
+    "addPlayer": "Add Player",
+    "playerName": "Player Name",
+    "gold": "Gold",
+    "apples": "Apples",
+    "cheese": "Cheese",
+    "bread": "Bread",
+    "chickens": "Chickens",
+    "contraband": "Contraband Value",
+    "calculateScores": "Calculate Scores",
+    "playerJoined": "{{name}} joined the room"
+  },
+  "results": {
+    "winner": "Winner!",
+    "basePoints": "Base Points: {{points}}",
+    "bonusPoints": "Bonus Points: {{points}}",
+    "totalScore": "Total Score: {{score}}",
+    "kingOf": "King of: {{goods}}",
+    "queenOf": "Queen of: {{goods}}",
+    "playAgain": "Play Again"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "home": {
+    "title": "شريف نوتنغهام",
+    "subtitle": "حاسبة نقاط نهاية اللعبة",
+    "createRoom": "إنشاء غرفة",
+    "joinRoom": "الانضمام لغرفة",
+    "roomIdPlaceholder": "أدخل رمز الغرفة",
+    "roomCreated": "تم إنشاء الغرفة!",
+    "join": "انضمام"
+  },
+  "room": {
+    "roomId": "رمز الغرفة: {{id}}",
+    "waiting": "في انتظار اللاعبين...",
+    "addPlayer": "إضافة لاعب",
+    "playerName": "اسم اللاعب",
+    "gold": "ذهب",
+    "apples": "تفاح",
+    "cheese": "جبن",
+    "bread": "خبز",
+    "chickens": "دجاج",
+    "contraband": "قيمة الممنوعات",
+    "calculateScores": "حساب النقاط",
+    "playerJoined": "انضم {{name}} للغرفة"
+  },
+  "results": {
+    "winner": "الفائز!",
+    "basePoints": "النقاط الأساسية: {{points}}",
+    "bonusPoints": "النقاط الإضافية: {{points}}",
+    "totalScore": "المجموع الكلي: {{score}}",
+    "kingOf": "ملك الـ: {{goods}}",
+    "queenOf": "ملكة الـ: {{goods}}",
+    "playAgain": "العب مرة أخرى"
+  }
+}
