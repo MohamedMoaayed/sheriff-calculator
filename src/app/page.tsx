@@ -26,6 +26,7 @@ export default function Home() {
   // IG Stories State
   const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
   const [storyProgress, setStoryProgress] = useState(0);
+  const [isStoryPaused, setIsStoryPaused] = useState(false);
 
   const ar = i18n.language === 'ar';
 
@@ -39,7 +40,7 @@ export default function Home() {
     document.documentElement.lang = lang;
   }, [i18n.language]);
 
-  // IG Stories Auto-Advance and Sound playback effect
+  // IG Stories Sound Trigger Effect
   useEffect(() => {
     if (activeStoryIdx === null) return;
     
@@ -52,6 +53,11 @@ export default function Home() {
         else if (activeStoryIdx === 3 || activeStoryIdx === 7) playStory4();
       } catch (_) {}
     }
+  }, [activeStoryIdx, soundOn]);
+
+  // IG Stories Auto-Advance Effect
+  useEffect(() => {
+    if (activeStoryIdx === null) return;
     
     setStoryProgress(0);
     const duration = 8000; // 8 seconds per slide
@@ -60,6 +66,7 @@ export default function Home() {
     
     const interval = setInterval(() => {
       setStoryProgress(prev => {
+        if (isStoryPaused) return prev; // Freeze progress if paused!
         if (prev >= 100) {
           if (activeStoryIdx < 7) {
             setActiveStoryIdx(activeStoryIdx + 1);
@@ -73,7 +80,7 @@ export default function Home() {
     }, intervalTime);
     
     return () => clearInterval(interval);
-  }, [activeStoryIdx, soundOn]);
+  }, [activeStoryIdx, isStoryPaused]);
 
   const toggleLanguage = () => {
     if (soundOn) playClick();
@@ -166,7 +173,7 @@ export default function Home() {
         ].map(item => (
           <button
             key={item.idx}
-            onClick={() => { if (soundOn) playClick(); setActiveStoryIdx(item.idx); }}
+            onClick={() => { if (soundOn) playClick(); setIsStoryPaused(false); setActiveStoryIdx(item.idx); }}
             style={{
               flexShrink: 0,
               background: 'transparent',
@@ -214,15 +221,18 @@ export default function Home() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(10, 9, 8, 0.95)',
-            backdropFilter: 'blur(10px)',
+            background: '#0a0908',
             zIndex: 10000,
             display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            justifyContent: 'center',
+            padding: 'calc(1.2rem + var(--safe-top)) 1.25rem calc(1.5rem + var(--safe-bottom))',
             animation: 'fadeIn 0.22s ease-out',
             color: '#fff',
-            padding: '1rem',
+            width: '100vw',
+            height: '100dvh',
+            overflow: 'hidden',
           }}
           onClick={(e) => {
             // Click zone: LTR (click right side -> advance, left -> back)
@@ -249,90 +259,106 @@ export default function Home() {
             }
           }}
         >
-          {/* Inner Sandboxed Responsive Smartphone Container */}
-          <div 
-            style={{ 
-              width: '100%', 
-              maxWidth: '430px', 
-              height: '100%', 
-              maxHeight: 'clamp(580px, 94dvh, 800px)', 
-              borderRadius: 'clamp(0px, 4vw, 24px)', 
-              overflow: 'hidden', 
-              position: 'relative', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              justifyContent: 'space-between', 
-              padding: 'calc(1.2rem + var(--safe-top)) 1.25rem calc(1.5rem + var(--safe-bottom))', 
-              boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)' 
+          {/* Background Story Image */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(/images/story-${activeStoryIdx + 1}.png)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.85,
+              zIndex: 1,
             }}
-            onClick={(e) => e.stopPropagation()} // prevents click through to backdrop
-          >
-            {/* Background Story Image */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: `url(/images/story-${activeStoryIdx + 1}.png)`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.85,
-                zIndex: 1,
-              }}
-            />
+          />
 
-            {/* Dark Vignette/Overlay Gradient */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(to bottom, rgba(10,9,8,0.7) 0%, transparent 25%, transparent 60%, rgba(10,9,8,0.95) 100%)',
-                zIndex: 2,
-              }}
-            />
+          {/* Dark Vignette/Overlay Gradient */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to bottom, rgba(10,9,8,0.7) 0%, transparent 25%, transparent 60%, rgba(10,9,8,0.95) 100%)',
+              zIndex: 2,
+            }}
+          />
 
-            {/* Story Dialog wrapper */}
-            <div style={{ width: '100%', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-              
-              {/* Top Segments & Header */}
-              <div>
-                <div style={{ display: 'flex', gap: '5px', marginBottom: '0.75rem', width: '100%', flexDirection: ar ? 'row-reverse' : 'row' }}>
-                  {[0, 1, 2, 3, 4, 5, 6, 7].map(idx => (
+          {/* Story Dialog Content wrapper (keeps elements beautifully aligned and centered on desktop) */}
+          <div style={{ width: '100%', maxWidth: '500px', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+            
+            {/* Top Segments & Header */}
+            <div>
+              <div style={{ display: 'flex', gap: '5px', marginBottom: '0.75rem', width: '100%', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                {[0, 1, 2, 3, 4, 5, 6, 7].map(idx => (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      height: '3.5px',
+                      background: 'rgba(255,255,255,0.22)',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
                     <div
-                      key={idx}
                       style={{
-                        flex: 1,
-                        height: '3.5px',
-                        background: 'rgba(255,255,255,0.22)',
-                        borderRadius: '2px',
-                        overflow: 'hidden',
-                        position: 'relative',
+                        position: 'absolute',
+                        top: 0,
+                        left: ar ? 'auto' : 0,
+                        right: ar ? 0 : 'auto',
+                        bottom: 0,
+                        background: 'var(--primary)',
+                        width: idx < activeStoryIdx ? '100%' : idx === activeStoryIdx ? `${storyProgress}%` : '0%',
+                        transition: idx === activeStoryIdx ? 'width 0.1s linear' : 'none',
                       }}
-                    >
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: ar ? 'auto' : 0,
-                          right: ar ? 0 : 'auto',
-                          bottom: 0,
-                          background: 'var(--primary)',
-                          width: idx < activeStoryIdx ? '100%' : idx === activeStoryIdx ? `${storyProgress}%` : '0%',
-                          transition: idx === activeStoryIdx ? 'width 0.1s linear' : 'none',
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: ar ? 'row-reverse' : 'row' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexDirection: ar ? 'row-reverse' : 'row' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1.5px solid var(--primary)', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>
-                      🏰
-                    </div>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, textShadow: '0 1px 4px #000', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', color: 'var(--primary)' }}>
-                      {t('home.title')}
-                    </span>
+                    />
                   </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1.5px solid var(--primary)', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>
+                    🏰
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textShadow: '0 1px 4px #000', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', color: 'var(--primary)' }}>
+                    {t('home.title')}
+                  </span>
+                </div>
+                
+                {/* Control Action Buttons (Stop/Pause & Close) */}
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                  {/* Stop / Pause Autoplay Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (soundOn) playClick();
+                      setIsStoryPaused(!isStoryPaused);
+                    }}
+                    style={{
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      minWidth: '32px',
+                      minHeight: '32px',
+                      padding: 0,
+                      fontSize: '0.85rem',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: 'none',
+                      transform: 'none',
+                    }}
+                    title={isStoryPaused ? (ar ? 'تشغيل' : 'Play') : (ar ? 'إيقاف مؤقت' : 'Pause')}
+                  >
+                    {isStoryPaused ? '▶️' : '⏸️'}
+                  </button>
+
+                  {/* Close button */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -362,62 +388,63 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-
-              {/* Bottom Card Context */}
-              <div
-                style={{
-                  background: 'rgba(30, 27, 24, 0.94)',
-                  border: '1.5px solid var(--primary)',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  textAlign: ar ? 'right' : 'left',
-                }}
-                onClick={(e) => {
-                  // Click zone within dialogue card (still supports left/right advance/prev)
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickX = e.clientX - rect.left;
-                  const width = rect.width;
-                  
-                  const isClickRight = clickX > width * 0.45;
-                  const advance = ar ? !isClickRight : isClickRight;
-
-                  if (advance) {
-                    if (activeStoryIdx < 7) {
-                      setActiveStoryIdx(activeStoryIdx + 1);
-                    } else {
-                      setActiveStoryIdx(null);
-                    }
-                  } else {
-                    if (activeStoryIdx > 0) {
-                      setActiveStoryIdx(activeStoryIdx - 1);
-                    } else {
-                      setActiveStoryIdx(null);
-                    }
-                  }
-                }}
-              >
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.5rem', background: 'rgba(194,155,71,0.15)', border: '1px solid var(--primary)', borderRadius: '20px', fontSize: '0.74rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.65rem', fontFamily: ar ? 'ArefRuqaa' : 'inherit', flexDirection: ar ? 'row-reverse' : 'row' }}>
-                  🎙️ {ar ? 'سيد اللعبة (المُوجّه)' : 'Gamemaster Explanation'}
-                </div>
-                
-                <h2 style={{ fontSize: 'clamp(1.25rem, 5vw, 1.45rem)', color: '#fff', margin: 0, marginBottom: '0.5rem', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', textShadow: 'none' }}>
-                  {t(`stories.title${activeStoryIdx + 1}`)}
-                </h2>
-                
-                <p style={{ fontSize: ar ? 'clamp(1.15rem, 4.5vw, 1.3rem)' : 'clamp(1.02rem, 4vw, 1.15rem)', color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: ar ? 1.8 : 1.65, fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
-                  {t(`stories.desc${activeStoryIdx + 1}`)}
-                </p>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontFamily: ar ? 'ArefRuqaa' : 'inherit', flexDirection: ar ? 'row-reverse' : 'row' }}>
-                  <span>◀ {ar ? 'اضغط لليسار للرجوع' : 'Tap left for back'}</span>
-                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{activeStoryIdx + 1} / 8</span>
-                  <span>{ar ? 'اضغط لليمين للتالي' : 'Tap right for next'} ▶</span>
-                </div>
-              </div>
-
             </div>
+
+            {/* Bottom Narrator Dialogue Card */}
+            <div
+              style={{
+                background: 'rgba(30, 27, 24, 0.94)',
+                border: '1.5px solid var(--primary)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                boxShadow: '0 12px 36px rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(16px)',
+                textAlign: ar ? 'right' : 'left',
+              }}
+              dir={ar ? 'rtl' : 'ltr'}
+              onClick={(e) => {
+                // Dialogue click advance/prev
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+                
+                const isClickRight = clickX > width * 0.45;
+                const advance = ar ? !isClickRight : isClickRight;
+
+                if (advance) {
+                  if (activeStoryIdx < 7) {
+                    setActiveStoryIdx(activeStoryIdx + 1);
+                  } else {
+                    setActiveStoryIdx(null);
+                  }
+                } else {
+                  if (activeStoryIdx > 0) {
+                    setActiveStoryIdx(activeStoryIdx - 1);
+                  } else {
+                    setActiveStoryIdx(null);
+                  }
+                }
+              }}
+            >
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.5rem', background: 'rgba(194,155,71,0.15)', border: '1px solid var(--primary)', borderRadius: '20px', fontSize: '0.74rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.65rem', fontFamily: ar ? 'ArefRuqaa' : 'inherit', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                🎙️ {ar ? 'سيد اللعبة (المُوجّه)' : 'Gamemaster Explanation'}
+              </div>
+              
+              <h2 style={{ fontSize: 'clamp(1.25rem, 5vw, 1.45rem)', color: '#fff', margin: 0, marginBottom: '0.5rem', fontFamily: ar ? 'ArefRuqaa' : 'var(--font-cinzel)', textShadow: 'none' }}>
+                {t(`stories.title${activeStoryIdx + 1}`)}
+              </h2>
+              
+              <p style={{ fontSize: ar ? 'clamp(1.15rem, 4.5vw, 1.3rem)' : 'clamp(1.02rem, 4vw, 1.15rem)', color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: ar ? 1.8 : 1.65, fontFamily: ar ? 'ArefRuqaa' : 'inherit' }}>
+                {t(`stories.desc${activeStoryIdx + 1}`)}
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontFamily: ar ? 'ArefRuqaa' : 'inherit', flexDirection: ar ? 'row-reverse' : 'row' }}>
+                <span>◀ {ar ? 'اضغط لليسار للرجوع' : 'Tap left for back'}</span>
+                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{activeStoryIdx + 1} / 8</span>
+                <span>{ar ? 'اضغط لليمين للتالي' : 'Tap right for next'} ▶</span>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
